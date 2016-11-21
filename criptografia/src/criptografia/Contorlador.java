@@ -24,15 +24,6 @@ public class Contorlador {
     // 0 0 0 1
     private final int[][] matriz_identidad = {{1, 0, 0, 0}, {0, 1, 0, 0}, {0, 0, 1, 0}, {0, 0, 0, 1}};
 
-    // Matriz que contiene el resultado de la cadena codificada.
-    private String[][] cadena_codificada;
-
-    // Matriz m*4 donde se almacena nuestra cadena con valores enteros
-    int[][] matriz_b;
-
-    // Matriz que contiene el resultado de la multiplicacion entre matrices
-    int[][] matriz_resultado;
-
     // Contructor
     public Contorlador() {
         //Cuerpo del constructor vacío
@@ -41,39 +32,44 @@ public class Contorlador {
     /**
      * Menú princial del progrma.
      *
-     * @throws IOException
+     * @throws java.io.IOException
      */
     public void menu() throws IOException {
         // Objeto para la entrada de datos
         BufferedReader entrada = new BufferedReader(new InputStreamReader(System.in));
-
         // Valor ingresado por el usuario
         int opcion = 0;
+        // Cadena ingresada por el usuario
+        String cadena;
 
         do {
-            // Menu que se muestra en pantalla para el usuario
             System.out.println(""
                     + "---------- Menú de inicio ----------\n"
                     + "------------------------------------\n"
                     + "[1] Encriptar mensaje.\n"
                     + "[2] Desencriptar mensaje.\n"
-                    + "[3] Finalizar progrmaa.\n");
+                    + "[3] Finalizar progrma.\n");
             System.out.print("elmer@calel$ ");
 
-            opcion = Integer.parseInt(entrada.readLine());
+            try {
+                opcion = Integer.parseInt(entrada.readLine());
+            } catch (IOException | NumberFormatException e) {
+                opcion = 0;
+            }
 
             switch (opcion) {
+                // Encriptar
                 case 1:
-                    System.out.println("Escriba un mensaje:");
-                    System.out.print("elmer@calel$ ");
-                    String cadena = entrada.readLine();
-                    codificar(cadena);
+                    System.out.println("Escriba un mensaje:\n");
+                    cadena = entrada.readLine();
+                    encriptar_cadena(cadena);
                     break;
+                // Desencriptar
                 case 2:
                     try {
                         System.out.println("Escriba la cadena a desencriptar:");
-                        String _cadena = entrada.readLine();
-                        decodificar(_cadena);
+                        cadena = entrada.readLine();
+                        desencriptar_cadena(cadena);
                     } catch (Exception exception) {
                         System.err.println("El mensaje no puede desencriptarse!");
                     }
@@ -95,144 +91,100 @@ public class Contorlador {
     /**
      * Realiza todas las operaciones necesarias para la codificación de la
      * cadena ingresada.
-     *
-     * @param cadena
      */
-    private void codificar(String cadena) {
-        int m = (cadena.length() / 4) + 1;
+    private void encriptar_cadena(String cadena) {
+        int m = (cadena.length() / 4) + 1; // filas de la matriz
         int[][] matriz_valores = new int[m][4];
 
-        System.out.println("<<<=============== CODIFICACIÓN ===============>>>");
-        System.out.println("Paso 1:");
-        System.out.println("Dividir la cadena de entrada y asociarla con cada uno de los valores numércios establecidos.");
-        dividir_cadena(matriz_valores, m, cadena);
-
-        System.out.println("Paso 2:");
-        System.out.println("Almacenar los valores en una matriz m*4, esta matriz contiene el código del mensaje a encriptar.");
-        almacenar_valores(matriz_valores, m, cadena);
-
-        System.out.println("Paso 3:");
-        System.out.println("3.1 - Multiplicar cada elemento de la matriz de valores por la matriz A, para obtener la matriz con el mensaje encriptado.");
-        matriz_valores = multiplicar_matriz(matriz_valores, m);
-        System.out.println("3.2 - Sustiruir cada valor numérico por su correspondiente binario, esto aumenta la seguridad y genera la salida de la cadena encriptada:");
-        aumentar_seguridad(matriz_valores, m);
+        // Paso 1 y 2
+        asociar_valores_numericos(matriz_valores, m, cadena);
+        // Paso 3
+        obtener_mensaje_encriptado(matriz_valores, m);
     }
 
     /**
-     * Muestra el resultado del paso 1, pero no es necesario, es únicamente para
-     * seguir los pasos.
-     *
-     * @param matriz_valores
-     * @param m
-     * @param cadena
+     * Divide la cadena de entrada y la asocia con cada uno de los valores
+     * numéricos establecidos en el enunciado. Almacena los valores en una
+     * matriz de m*4, esta matriz conotiene el cócigo del mensaje a encriptar.
      */
-    private void dividir_cadena(int[][] matriz_valores, int m, String cadena) {
-        System.out.print("\t");
-        for (int i = 0; i < cadena.length(); i++) {
-            System.out.print(cadena.charAt(i) + "|\t");
-        }
-        System.out.print("\n\t");
-        for (int i = 0; i < cadena.length(); i++) {
-            System.out.print(asociar_valor(Character.toUpperCase(cadena.charAt(i))) + "|\t");
-        }
-        System.out.println("\n");
-    }
-
-    /**
-     * Crea la matriz de valores numéricos.
-     *
-     * @param cadena
-     */
-    private void almacenar_valores(int[][] matriz_valores, int m, String cadena) {
+    private void asociar_valores_numericos(int[][] matriz_valores, int m, String cadena) {
         int k = 0;
         for (int y = 0; y < m; y++) {
             for (int x = 0; x < 4; x++) {
                 if (k < cadena.length()) {
-                    matriz_valores[y][x] = asociar_valor(Character.toUpperCase(cadena.charAt(k)));
+                    matriz_valores[y][x] = asociar_valor_numerico(Character.toUpperCase(cadena.charAt(k)));
                 } else {
                     matriz_valores[y][x] = 0;
                 }
                 k++;
-                System.out.print(matriz_valores[y][x] + "\t");
             }
-            System.out.println();
         }
-        System.out.println("\n");
     }
 
     /**
-     * Multiplica la matriz de valores por la matriz A, obteniendo el mensaje
-     * encriptado.
-     *
-     * @param matriz_a
-     * @param matriz_valores
-     * @param m
+     * Multiplica cada elemento de la matriz de valores por la matirz A, obtiene
+     * la matriz con el mensaje encriptado.
      */
-    private int[][] multiplicar_matriz(int[][] matriz_valores, int m) {
+    private void obtener_mensaje_encriptado(int[][] matriz_valores, int m) {
         int mtemp[][] = new int[m][4];
-        for (int k = 0; k < m; k++) { // recorre las filas+1 filas de matriz_valores
+        for (int k = 0; k < m; k++) { // recorre las m filas de matriz_valores
             for (int j = 0; j < 4; j++) { // recorre las colunas de matriz_a
                 for (int i = 0; i < 4; i++) { // recorre las columnas de matriz_valores
                     mtemp[k][j] += matriz_valores[k][i] * matriz_a[i][j];// realizamos la multiplicacion                    
                 }
-                System.out.print(mtemp[k][j] + "\t");
             }
-            System.out.println();
         }
-        System.out.println("\n");
-
-        return mtemp;
+        // Aumenta la seguridad e imprime el mensaje
+        aumentar_seguridad(mtemp, m);
     }
 
     /**
      * Convierte cada celda numérica de la matriz_valores a su correspondiente
-     * binario.
-     *
-     * @param matrizResultado
-     * @param m
+     * binario. Siendo esta la salida de la cadena encriptada.
      */
     private void aumentar_seguridad(int[][] matriz_valores, int m) {
-        cadena_codificada = new String[m][4];
+        System.out.println("La cadena encriptada es:");
+        String[][] matriz_codificada = new String[m][4];
         for (int y = 0; y < m; y++) {
             for (int x = 0; x < 4; x++) {
                 String casilla = String.valueOf(matriz_valores[y][x]);
-                cadena_codificada[y][x] = "";
+                matriz_codificada[y][x] = "";
                 for (int i = 0; i < casilla.length(); i++) {
                     switch (casilla.charAt(i)) {
                         case '0':
-                            cadena_codificada[y][x] += "0000";
+                            matriz_codificada[y][x] += "0000";
                             break;
                         case '1':
-                            cadena_codificada[y][x] += "0001";
+                            matriz_codificada[y][x] += "0001";
                             break;
                         case '2':
-                            cadena_codificada[y][x] += "0010";
+                            matriz_codificada[y][x] += "0010";
                             break;
                         case '3':
-                            cadena_codificada[y][x] += "0011";
+                            matriz_codificada[y][x] += "0011";
                             break;
                         case '4':
-                            cadena_codificada[y][x] += "0100";
+                            matriz_codificada[y][x] += "0100";
                             break;
                         case '5':
-                            cadena_codificada[y][x] += "0101";
+                            matriz_codificada[y][x] += "0101";
                             break;
                         case '6':
-                            cadena_codificada[y][x] += "0110";
+                            matriz_codificada[y][x] += "0110";
                             break;
                         case '7':
-                            cadena_codificada[y][x] += "0111";
+                            matriz_codificada[y][x] += "0111";
                             break;
                         case '8':
-                            cadena_codificada[y][x] += "1000";
+                            matriz_codificada[y][x] += "1000";
                             break;
                         case '9':
-                            cadena_codificada[y][x] += "1001";
+                            matriz_codificada[y][x] += "1001";
                             break;
                     }
                 }
-                cadena_codificada[y][x] += ","; // coma para poder identificar casillas
-                System.out.print(cadena_codificada[y][x]); // Imprimimos la cadena encriptada
+                matriz_codificada[y][x] += ","; // coma para poder identificar casillas
+                System.out.print(matriz_codificada[y][x]); // Imprimimos la cadena encriptada
             }
         }
         System.out.println("\n");
@@ -241,11 +193,8 @@ public class Contorlador {
     /**
      * Asocia cada componente de la cadena ingresada por el usuario con su valor
      * numérico correspondiente.
-     *
-     * @param ascii
-     * @return
      */
-    private int asociar_valor(int ascii) {
+    private int asociar_valor_numerico(int ascii) {
         switch (ascii) {
             case 32:
                 return 0;
@@ -311,83 +260,89 @@ public class Contorlador {
  /* . . . . . . . . . . . INICIO DE LA DECODIFICACIÓN . . . . . . . . . . .*/
     /**
      * Realiza las operaciones necesarias para desencriptar una cadena dada.
-     *
-     * @param cadena
      */
-    private void decodificar(String cadena) {
-        // Paso 1: Calcular matriz inversa de de la matriz A
-        calcular_inversa();
-        // Paso 2: Ordenar el ensaje encriptado
-        String m_binario[] = cadena.split(",");
-        int m = m_binario.length / 4;
-        int[][] matriz_ordenada = new int[m][4];
-        ordenar_mensaje(m_binario, matriz_ordenada);
-        // Paso 3: Multiplicar matriz_ordenada por matriz_inversa
-        matriz_ordenada = obtener_matriz_desencriptada(matriz_ordenada, m);
-        // Paso 4: Cambiar los valores encontrados por el valor del alfabeto correspondiente
-        System.out.println("El mensaje es:\n");
-        mostrar_mensaje(matriz_ordenada, m);
-        System.out.println("\n");
+    private void desencriptar_cadena(String cadena) {
+        String[] array_binarios = cadena.split(",");
+        int m = array_binarios.length / 4;
+        int[][] matriz_encriptada = new int[m][4];        
+        int matriz_inversa[][] = new int[4][4];
+        colonar_identidad(matriz_inversa);
+        // Paso 1
+        calcular_inversa(matriz_inversa);
+        // Paso 2      
+        ordenar_mensaje_encriptado(array_binarios, matriz_encriptada);
+        // Paso 3
+        matriz_encriptada = obtener_matriz_desencriptada(matriz_encriptada, matriz_inversa, m);
+        // Paso 4        
+        mostrar_mensaje(matriz_encriptada, m);
+    }
+    
+    /**
+     * Clona la matriz identidad.
+     */
+    private void colonar_identidad(int matriz_inversa[][]){
+        for (int y = 0; y < 4; y++) {
+            System.arraycopy(matriz_identidad[y], 0, matriz_inversa[y], 0, 4);            
+        }
     }
 
     /**
      * Calcula la matriz inversa de la matriz A.
-     *
-     * @param matirz_inversa
      */
-    private void calcular_inversa() {
+    private void calcular_inversa(int matriz_inversa[][]) {
+
         //R4 = R4-R1
         for (int i = 0; i < 4; i++) {
-            matriz_identidad[3][i] = matriz_identidad[3][i] - matriz_identidad[0][i];
+            matriz_inversa[3][i] = matriz_inversa[3][i] - matriz_inversa[0][i];
         }
         //R1 = R1-2*R2
         for (int i = 0; i < 4; i++) {
-            matriz_identidad[0][i] = matriz_identidad[0][i] - 2 * matriz_identidad[1][i];
+            matriz_inversa[0][i] = matriz_inversa[0][i] - 2 * matriz_inversa[1][i];
         }
         //R3 = R3-R2
         for (int i = 0; i < 4; i++) {
-            matriz_identidad[2][i] = matriz_identidad[2][i] - matriz_identidad[1][i];
+            matriz_inversa[2][i] = matriz_inversa[2][i] - matriz_inversa[1][i];
         }
         //R3 = -R3
         for (int i = 0; i < 4; i++) {
-            matriz_identidad[2][i] = -1 * matriz_identidad[2][i];
+            matriz_inversa[2][i] = -1 * matriz_inversa[2][i];
         }
         //R2 = R2-R3
         for (int i = 0; i < 4; i++) {
-            matriz_identidad[1][i] = matriz_identidad[1][i] - matriz_identidad[2][i];
+            matriz_inversa[1][i] = matriz_inversa[1][i] - matriz_inversa[2][i];
         }
         //R1 = R1+2*R3
         for (int i = 0; i < 4; i++) {
-            matriz_identidad[0][i] = matriz_identidad[0][i] + 2 * matriz_identidad[2][i];
+            matriz_inversa[0][i] = matriz_inversa[0][i] + 2 * matriz_inversa[2][i];
         }
         //R4 = -R4
         for (int i = 0; i < 4; i++) {
-            matriz_identidad[3][i] = -1 * matriz_identidad[3][i];
+            matriz_inversa[3][i] = -1 * matriz_inversa[3][i];
         }
         //R2 = R2-R4
         for (int i = 0; i < 4; i++) {
-            matriz_identidad[1][i] = matriz_identidad[1][i] - matriz_identidad[3][i];
+            matriz_inversa[1][i] = matriz_inversa[1][i] - matriz_inversa[3][i];
         }
         //R1 = R1-R4
         for (int i = 0; i < 4; i++) {
-            matriz_identidad[0][i] = matriz_identidad[0][i] - matriz_identidad[3][i];
+            matriz_inversa[0][i] = matriz_inversa[0][i] - matriz_inversa[3][i];
         }
     }
 
     /**
-     * Ordena el mensaje encriptado
-     *
-     * @param cadena
+     * Ordena el mensaje encriptado en una matriz de m*4, Separa la cadena de
+     * binarios y los separa por cuartetos, Combierte cada binario a su
+     * correspondiente valor numérico.
      */
-    private void ordenar_mensaje(String m_binario[], int matriz_ordenada[][]) {
+    private void ordenar_mensaje_encriptado(String[] array_binarios, int[][] matriz_encriptada) {
         int y = 0;
         int x = 0;
-        for (String b : m_binario) {
+        for (String b : array_binarios) {
             String tmp_valor = "";
             for (int i = 0; i < b.length(); i = i + 4) {
-                tmp_valor += obtener_valor_numerico(b.substring(i, i + 4));
+                tmp_valor += cambiar_binario_numerico(b.substring(i, i + 4));
             }
-            matriz_ordenada[y][x] = Integer.parseInt(tmp_valor);
+            matriz_encriptada[y][x] = Integer.parseInt(tmp_valor);
 
             x++;
             y = x == 4 ? y + 1 : y;
@@ -396,12 +351,9 @@ public class Contorlador {
     }
 
     /**
-     * Retorna el número correspondiente al vinario asociado.
-     *
-     * @param valor
-     * @return
+     * Retorna el número correspondiente al binario asociado.
      */
-    private int obtener_valor_numerico(String valor) {
+    private int cambiar_binario_numerico(String valor) {
         switch (valor) {
             case "0000":
                 return 0;
@@ -430,47 +382,36 @@ public class Contorlador {
     /**
      * Multiplica la matriz con los valores encriptados por la matriz inversa de
      * A, para obtener el mensaje en su valor numérico.
-     *
-     * @param m
-     * @param n
-     * @return
      */
-    private int[][] obtener_matriz_desencriptada(int[][] m, int n) {
-        int mtemp[][] = new int[n][4];
-        for (int ym = 0; ym < n; ym++) { // recorre las n filas de m
+    private int[][] obtener_matriz_desencriptada(int[][] matriz_encriptada, int matriz_inversa[][], int m) {
+        int mtemp[][] = new int[m][4];
+        for (int ym = 0; ym < m; ym++) { // recorre las m filas de matriz_encriptada
             for (int xinv = 0; xinv < 4; xinv++) { // recorre las colunas de a
-                for (int xm = 0; xm < 4; xm++) { // recorre las columnas de m
-                    mtemp[ym][xinv] += m[ym][xm] * matriz_identidad[xm][xinv];// realizamos la multiplicacion
+                for (int xm = 0; xm < 4; xm++) { // recorre las columnas de matriz_encriptada
+                    mtemp[ym][xinv] += matriz_encriptada[ym][xm] * matriz_inversa[xm][xinv];// realizamos la multiplicacion
                 }
-                System.out.print(mtemp[ym][xinv] + "\t");
             }
-            System.out.println();
         }
-        System.out.println("\n");
         return mtemp;
     }
 
     /**
      * Imprime el mensaje que se ha desencriptado.
-     *
-     * @param matriz
-     * @param m
      */
     private void mostrar_mensaje(int[][] matriz, int m) {
+        System.out.println("El mensaje es:\n");
         for (int i = 0; i < m; i++) {
             for (int j = 0; j < 4; j++) {
-                System.out.print(obtener_letra(matriz[i][j]));
+                System.out.print(cambiar_numero_caracter(matriz[i][j]));
             }
         }
+        System.out.println("\n");
     }
 
     /**
-     * Retorna el caracter correspondiente de acuerdo al valor numérico.
-     *
-     * @param matrizBDeString
-     * @param m
+     * Cambia los valores encontrados por el valor del alfabeto correspondiente.
      */
-    private char obtener_letra(int valor) {
+    private char cambiar_numero_caracter(int valor) {
         switch (valor) {
             case 0:
                 return ' ';

@@ -1,12 +1,8 @@
 package criptografia;
 
-import java.io.*;
+import java.io.IOException;
 
 /**
- * Programa que permite encriptar y desencriptar mensajes, pidiendo al usuario
- * el mensaje para encriptarlo o bien solicitar una cadena encriptada para poder
- * decifrar el menseje.
- *
  * @author Elmer C. Ramos™
  */
 public class Criptografia {
